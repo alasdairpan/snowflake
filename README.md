@@ -7,16 +7,16 @@
 - **Unique IDs**: Generates 64-bit unique, time-based IDs.
 - **High Scalability**: Designed for distributed systems with multiple nodes.
 - **Efficient**: Low-latency ID generation with no contention.
-- **Customizable**: Easy to tweak the bit allocation (timestamp, machine ID, sequence).
+- **Customizable**: Easy to tweak the bit allocation (timestamp, node ID, sequence).
 - **Rusty** 🦀: Written in pure Rust for performance and safety.
 
 ## 📐 How It Works
 
 The Snowflake algorithm generates IDs based on:
 
-- **Timestamp** (41 bits) - Time in milliseconds since a custom epoch.
-- **Machine ID** (10 bits) - A unique identifier for the machine or node.
-- **Sequence** (12 bits) - A per-machine counter that resets every millisecond.
+- **Timestamp** (32 bits) - Time in seconds since a custom epoch.
+- **Node ID** (8 bits) - A unique identifier for the node.
+- **Sequence** (23 bits) - A per-node counter that resets every millisecond.
 
 The default bit allocation follows the original Snowflake design but can be customized for your specific needs.
 
@@ -35,7 +35,7 @@ Then, import it in your Rust code:
 use snowflake::Snowflake;
 
 fn main() {
-    let mut generator = Snowflake::new(1).unwrap(); // machine_id, datacenter_id
+    let mut generator = Snowflake::new(1).unwrap();
     let id = generator.generate().unwrap();
     println!("Generated ID: {}", id);
 }
@@ -52,7 +52,7 @@ let mut generator = Snowflake::with_config(1, 4, 1000, epoch).unwrap();
 
 ## 🔧 Configuration
 
-You can adjust the bit allocation if needed by customizing the timestamp, machine ID, or sequence length. This allows flexibility for systems with more machines or longer sequences per second.
+You can adjust the bit allocation if needed by customizing the timestamp, node ID, or sequence length. This allows flexibility for systems with more nodes or longer sequences per second.
 
 ### 🧪 Running Tests
 
