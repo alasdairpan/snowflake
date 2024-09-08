@@ -124,8 +124,21 @@ impl Snowflake {
     /// let snowflake = Snowflake::new(worker_id);
     /// assert!(snowflake.is_err());
     /// ```
-    pub fn new(worker_id: u64) -> Result<Self, SnowflakeError> {
-        Self::with_config(worker_id, Some(WORKER_ID_BITS), Some(TIMEOUT_MILLIS), Some(EPOCH))
+    pub fn new(worker_id: u64) -> Result<Self, SnowflakeError> { Self::builder().with_worker_id(worker_id).build() }
+
+    /// Create a new Snowflake builder with the default configuration.
+    /// # Examples
+    /// ```
+    /// use snowflake::Snowflake;
+    /// let mut snowflake = Snowflake::builder().build().unwrap();
+    /// ```
+    pub fn builder() -> SnowflakeBuilder {
+        SnowflakeBuilder {
+            worker_id: 0,
+            worker_id_bits: Some(WORKER_ID_BITS),
+            timeout_millis: Some(TIMEOUT_MILLIS),
+            epoch: Some(EPOCH),
+        }
     }
 
     /// Create a new Snowflake generator with custom configuration.
@@ -137,16 +150,7 @@ impl Snowflake {
     ///   period. The default value is 1000 milliseconds.
     /// - `epoch`: The epoch time used as a reference. The default value is
     ///   1704038400000 (2024-01-01 00:00:00.000).
-    ///
-    /// # Examples
-    /// ```
-    /// use snowflake::Snowflake;
-    /// let worker_id = 1;
-    /// let worker_id_bits = 10;
-    /// let epoch = 1704038400000;
-    /// let mut snowflake = Snowflake::with_config(worker_id, Some(worker_id_bits), None, Some(epoch)).unwrap();
-    /// ```
-    pub fn with_config(
+    fn with_config(
         worker_id: u64,
         worker_id_bits: Option<u64>,
         timeout_millis: Option<u128>,
@@ -258,5 +262,44 @@ impl Snowflake {
             Ordering::Less => Err(SnowflakeError::ClockMoveBackwards),
             _ => Ok(now - self.epoch),
         }
+    }
+}
+
+/// A builder for creating a Snowflake generator with custom configuration.
+pub struct SnowflakeBuilder {
+    worker_id: u64,
+    worker_id_bits: Option<u64>,
+    timeout_millis: Option<u128>,
+    epoch: Option<u64>,
+}
+
+impl SnowflakeBuilder {
+    /// Set the worker ID for the Snowflake generator.
+    pub fn with_worker_id(mut self, worker_id: u64) -> Self {
+        self.worker_id = worker_id;
+        self
+    }
+
+    /// Set the number of bits used for the worker ID.
+    pub fn with_worker_id_bits(mut self, worker_id_bits: u64) -> Self {
+        self.worker_id_bits = Some(worker_id_bits);
+        self
+    }
+
+    /// Set the timeout duration for waiting for the next time period.
+    pub fn with_timeout_millis(mut self, timeout_millis: u128) -> Self {
+        self.timeout_millis = Some(timeout_millis);
+        self
+    }
+
+    /// Set the epoch time.
+    pub fn with_epoch(mut self, epoch: u64) -> Self {
+        self.epoch = Some(epoch);
+        self
+    }
+
+    /// Build the Snowflake generator with the specified configuration.
+    pub fn build(self) -> Result<Snowflake, SnowflakeError> {
+        Snowflake::with_config(self.worker_id, self.worker_id_bits, self.timeout_millis, self.epoch)
     }
 }

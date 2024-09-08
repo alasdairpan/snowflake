@@ -12,12 +12,18 @@ fn bench_new(b: &mut test::Bencher) {
 }
 
 #[bench]
-fn bench_with_config(b: &mut test::Bencher) {
+fn bench_builder(b: &mut test::Bencher) {
     b.iter(|| {
         let worker_id = 1;
-        let worker_id_bits = Some(4);
-        let epoch: Option<u64> = Some(1609459200000); // 2021-01-01 00:00:00.000 UTC
-        let _ = Snowflake::with_config(worker_id, worker_id_bits, None, epoch).unwrap();
+        let worker_id_bits = 4;
+        let epoch: u64 = 1609459200000; // 2021-01-01 00:00:00.000 UTC
+
+        let _ = Snowflake::builder()
+            .with_worker_id_bits(worker_id_bits)
+            .with_worker_id(worker_id)
+            .with_epoch(epoch)
+            .build()
+            .unwrap();
     });
 }
 

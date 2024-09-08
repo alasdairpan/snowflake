@@ -43,15 +43,18 @@ fn test_id_order() {
 #[test]
 fn test_invalid_worker_id_bits() {
     let worker_id = 1;
-    let worker_id_bits = Some(100);
-    let snowflake = Snowflake::with_config(worker_id, worker_id_bits, None, None);
+    let worker_id_bits = 100;
+    let snowflake = Snowflake::builder()
+        .with_worker_id(worker_id)
+        .with_worker_id_bits(worker_id_bits)
+        .build();
     assert!(matches!(snowflake.err(), Some(SnowflakeError::ArgumentError(..))));
 }
 
 #[test]
 fn test_invalid_epoch() {
     let worker_id = 1;
-    let epoch = Some(1_000_000_000_000_000);
-    let snowflake = Snowflake::with_config(worker_id, None, None, epoch);
+    let epoch = 1_000_000_000_000_000;
+    let snowflake = Snowflake::builder().with_worker_id(worker_id).with_epoch(epoch).build();
     assert!(matches!(snowflake.err(), Some(SnowflakeError::InvalidEpoch)));
 }
