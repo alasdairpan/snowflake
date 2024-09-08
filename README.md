@@ -69,8 +69,8 @@ cargo test
 
 ### Benchmark
 
-Rust version: rustc 1.79.0-nightly (dbce3b43b 2024-04-20)
-Machine setup: Apple M1 Pro 3.23GHz CPU 32GB RAM
+- Rust version: rustc 1.79.0-nightly (dbce3b43b 2024-04-20)
+- Machine setup: Apple M1 Pro 3.23GHz CPU 32GB RAM
 
 ```text
 test bench_generate    ... bench:         247 ns/iter (+/- 12)
