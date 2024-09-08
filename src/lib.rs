@@ -23,9 +23,9 @@
 //! - **Sequence**: 12 bits, providing uniqueness within the same millisecond.
 //! - **Total**: 64 bits.
 //!
-//! You can customize the number of bits used for the worker ID and sequence
-//! number. The total number of bits must be 64, and the worker ID and sequence
-//! number must be at least 1 bit each.
+//! The number of bits used for the worker ID and sequence
+//! number can be customized. The total number of bits must be 64, and the
+//! worker ID and sequence number must be at least 1 bit each.
 //!
 //!
 //! # Examples
@@ -82,16 +82,15 @@ const MAX_ADJUSTABLE_BITS: u64 = 64 - SIGN_BITS - TIMESTAMP_BITS;
 
 #[derive(Debug)]
 pub struct Snowflake {
-    epoch: u64,          // The epoch time used as a reference
-    last_timestamp: u64, // The most recent generation time
-    worker_id: u64,      // The ID of the worker generating the snowflakes
-    sequence: u64,       // The sequence within a time period
+    epoch: u64,                   // The epoch time used as a reference
+    last_timestamp: u64,          // The most recent generation time
+    worker_id: u64,               // The ID of the worker
+    sequence: u64,                // The sequence within a time period
+    timeout_millis: Option<u128>, // The timeout duration for waiting for the next time period
 
-    max_sequence: u64,    // A mask to limit the sequence value within the allowed range
-    timestamp_shift: u64, // The number of bits to shift the time value
+    max_sequence: u64,    // The maximum sequence value
+    timestamp_shift: u64, // The number of bits to shift the timestamp value
     worker_id_shift: u64, // The number of bits to shift the worker ID value
-
-    timeout_millis: u128, // The timeout duration for waiting for the next time period
 }
 
 #[derive(thiserror::Error, Debug, Clone, PartialEq)]
@@ -100,7 +99,7 @@ pub enum SnowflakeError {
     ArgumentError(String),
     #[error("clock move backwards")]
     ClockMoveBackwards,
-    #[error("waiting for the next period has timed out")]
+    #[error("wait for next period timeout")]
     WaitForNextPeriodTimeout,
     #[error("epoch must be greater than the current time")]
     InvalidEpoch,
@@ -109,16 +108,51 @@ pub enum SnowflakeError {
 }
 
 impl Snowflake {
+    ///  Create a new Snowflake generator with the default configuration.
+    /// The worker ID is the only required parameter.
+    /// # Examples
+    /// ```
+    /// use snowflake::Snowflake;
+    /// let worker_id = 1;
+    /// let mut snowflake = Snowflake::new(worker_id).unwrap();
+    /// ```
+    /// # Errors
+    /// Returns an error if the worker ID is greater than the maximum worker ID.
+    /// ```
+    /// use snowflake::Snowflake;
+    /// let worker_id = 1024;
+    /// let snowflake = Snowflake::new(worker_id);
+    /// assert!(snowflake.is_err());
+    /// ```
     pub fn new(worker_id: u64) -> Result<Self, SnowflakeError> {
-        Self::with_config(worker_id, WORKER_ID_BITS, TIMEOUT_MILLIS, EPOCH)
+        Self::with_config(worker_id, Some(WORKER_ID_BITS), Some(TIMEOUT_MILLIS), Some(EPOCH))
     }
 
+    /// Create a new Snowflake generator with custom configuration.
+    /// # Parameters
+    /// - `worker_id`: The ID of the worker.
+    /// - `worker_id_bits`: The number of bits used for the worker ID. The
+    ///   default value is 10 bits.
+    /// - `timeout_millis`: The timeout duration for waiting for the next time
+    ///   period. The default value is 1000 milliseconds.
+    /// - `epoch`: The epoch time used as a reference. The default value is
+    ///   1704038400000 (2024-01-01 00:00:00.000).
+    ///
+    /// # Examples
+    /// ```
+    /// use snowflake::Snowflake;
+    /// let worker_id = 1;
+    /// let worker_id_bits = 10;
+    /// let epoch = 1704038400000;
+    /// let mut snowflake = Snowflake::with_config(worker_id, Some(worker_id_bits), None, Some(epoch)).unwrap();
+    /// ```
     pub fn with_config(
         worker_id: u64,
-        worker_id_bits: u64,
-        timeout_millis: u128,
-        epoch: u64,
+        worker_id_bits: Option<u64>,
+        timeout_millis: Option<u128>,
+        epoch: Option<u64>,
     ) -> Result<Self, SnowflakeError> {
+        let worker_id_bits = worker_id_bits.unwrap_or(WORKER_ID_BITS);
         if !(MIN_BITS .. MAX_ADJUSTABLE_BITS).contains(&worker_id_bits)
             || !(MIN_BITS .. MAX_ADJUSTABLE_BITS).contains(&(MAX_ADJUSTABLE_BITS - worker_id_bits))
         {
@@ -139,6 +173,7 @@ impl Snowflake {
             )));
         }
 
+        let epoch = epoch.unwrap_or(EPOCH);
         if epoch >= Self::timestamp_millis()? {
             return Err(SnowflakeError::InvalidEpoch);
         }
@@ -155,10 +190,19 @@ impl Snowflake {
         })
     }
 
+    /// Generate a new Snowflake ID.
+    /// # Examples
+    /// ```
+    /// use snowflake::Snowflake;
+    /// let worker_id = 1;
+    /// let mut snowflake = Snowflake::new(worker_id).unwrap();
+    /// let id = snowflake.generate().unwrap();
+    /// println!("Generated ID: {}", id);
+    /// ```
     pub fn generate(&mut self) -> Result<u64, SnowflakeError> {
         let mut now = self.current_timestamp_millis_since_epoch()?;
         match now.cmp(&self.last_timestamp) {
-            // Clock move backwards
+            // The clock has moved backwards
             Ordering::Less => {
                 let possible_sequence = (self.sequence + 1) & self.max_sequence;
                 if possible_sequence > 0 {
@@ -168,9 +212,10 @@ impl Snowflake {
                         | (self.worker_id << self.worker_id_shift)
                         | (self.sequence));
                 }
+                // The sequence of the last period has been used up, throw an error
                 return Err(SnowflakeError::ClockMoveBackwards);
             }
-            // Multiple calls within the same time period can increase sequence
+            // Same time period, increase the sequence
             Ordering::Equal => {
                 self.sequence = (self.sequence + 1) & self.max_sequence;
                 if self.sequence == 0 {
@@ -178,8 +223,10 @@ impl Snowflake {
                     // period
                     let timeout_start = Instant::now();
                     while now <= self.last_timestamp {
-                        if Instant::now().duration_since(timeout_start).as_millis() > self.timeout_millis {
-                            return Err(SnowflakeError::WaitForNextPeriodTimeout);
+                        if let Some(timeout_millis) = self.timeout_millis {
+                            if Instant::now().duration_since(timeout_start).as_millis() > timeout_millis {
+                                return Err(SnowflakeError::WaitForNextPeriodTimeout);
+                            }
                         }
                         if let Ok(latest_timestamp_millis) = self.current_timestamp_millis_since_epoch() {
                             now = latest_timestamp_millis;
@@ -188,7 +235,7 @@ impl Snowflake {
                     }
                 }
             }
-            // First call in a time period
+            // New time period, reset the sequence
             Ordering::Greater => {
                 self.sequence = 0;
             }
