@@ -67,6 +67,17 @@ To run the test suite, use:
 cargo test
 ```
 
+### Benchmark
+
+Rust version: rustc 1.79.0-nightly (dbce3b43b 2024-04-20)
+Machine setup: Apple M1 Pro 3.23GHz CPU 32GB RAM
+
+```text
+test bench_generate    ... bench:         247 ns/iter (+/- 12)
+test bench_new         ... bench:          26 ns/iter (+/- 0)
+test bench_with_config ... bench:          26 ns/iter (+/- 0)
+```
+
 ## 🤝 Contributing
 
 Contributions are welcome! Feel free to submit issues, feature requests, or pull requests.
