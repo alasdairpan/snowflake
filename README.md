@@ -51,10 +51,24 @@ fn main() -> Result<(), Box<dyn Error>> {
 You can also set a custom config for ID generation:
 
 ```rust
-let worker_id = 1;
-let worker_id_bits = Some(4);
-let epoch: Option<u64> = Some(1609459200000); // 2021-01-01 00:00:00.000 UTC
-let mut snowflake = Snowflake::with_config(worker_id, worker_id_bits, None, epoch)?;
+use {snowflake::Snowflake, std::error::Error};
+
+fn main() -> Result<(), Box<dyn Error>> {
+    let worker_id = 1;
+    let worker_id_bits = 4;
+    let epoch: u64 = 1609459200000; // 2021-01-01 00:00:00.000 UTC
+
+    let mut snowflake = Snowflake::builder()
+        .with_worker_id_bits(worker_id_bits)
+        .with_worker_id(worker_id)
+        .with_epoch(epoch)
+        .build()?;
+
+    let sfid = snowflake.generate()?;
+    println!("Snowflake ID: {}", sfid);
+    Ok(())
+}
+
 ```
 
 See all [examples](./examples/).
@@ -73,9 +87,9 @@ cargo test
 - Machine setup: Apple M1 Pro 3.23GHz CPU 32GB RAM
 
 ```text
-test bench_generate    ... bench:         247 ns/iter (+/- 12)
-test bench_new         ... bench:          26 ns/iter (+/- 0)
-test bench_with_config ... bench:          26 ns/iter (+/- 0)
+test bench_builder  ... bench:          26 ns/iter (+/- 1)
+test bench_generate ... bench:         233 ns/iter (+/- 29)
+test bench_new      ... bench:          26 ns/iter (+/- 0)
 ```
 
 ## 🤝 Contributing
