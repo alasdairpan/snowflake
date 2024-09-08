@@ -1,4 +1,4 @@
-# 🚀 Snowflake
+# ❄️ Snowflake
 
 **Snowflake** is a lightweight, efficient Rust library that implements Twitter's Snowflake algorithm for generating unique, time-based IDs. Designed for distributed systems, it provides a scalable solution to ID generation, ensuring no collisions even across multiple workers. Perfect for building high-throughput, reliable systems.
 
