@@ -28,7 +28,7 @@ Add **Snowflake** to your `Cargo.toml`:
 
 ```toml
 [dependencies]
-snowflake = { git = "ssh://git@github.com/trayvonpan/snowflake.git" }
+snowflake = { git = "ssh://git@github.com/trayvonpan/snowflake.git", tag = "1.0.0" }
 ```
 
 Then, import it in your Rust code:
