@@ -53,7 +53,7 @@
 //!   Indicates that the generator has timed out while waiting for the next time
 //!   period.
 //! - [`InvalidEpoch`](SnowflakeError::InvalidEpoch): Indicates that the epoch
-//!  time must be greater than the current time.
+//!   time must be greater than the current time.
 //! - [`FailedConvertToMillis`](SnowflakeError::FailedConvertToMillis):
 //!   Indicates that the generator failed to convert the timestamp to
 //!   milliseconds.
