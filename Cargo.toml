@@ -1,12 +1,12 @@
 [package]
-name = "snowflake"
-version = "0.1.0"
+name = "twitter_snowflake"
+version = "1.0.0"
 edition = "2021"
 
 authors = ["Trayvon Pan <trayvonpan@gmail.com>"]
 categories = ["algorithms"]
 description = "A lightweight, efficient library that implements Twitter's Snowflake algorithm"
-documentation = "https://docs.rs/snowflake/"
+documentation = "https://docs.rs/twitter_snowflake/"
 keywords = ["snowflake", "twitter", "unique", "id", "generator"]
 license = "MIT"
 repository = "https://github.com/trayvonpan/snowflake/"

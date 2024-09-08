@@ -1,4 +1,4 @@
-use snowflake::{Snowflake, SnowflakeError};
+use twitter_snowflake::{Snowflake, SnowflakeError};
 
 #[test]
 fn test_new() {

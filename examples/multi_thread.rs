@@ -1,11 +1,11 @@
 use {
-    snowflake::Snowflake,
     std::{
         error::Error,
         sync::{mpsc, Arc, Mutex},
         thread,
         time::Duration,
     },
+    twitter_snowflake::Snowflake,
 };
 
 fn main() -> Result<(), Box<dyn Error>> {

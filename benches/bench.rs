@@ -1,6 +1,6 @@
 #![feature(test)]
 
-use snowflake::Snowflake;
+use twitter_snowflake::Snowflake;
 extern crate test;
 
 #[bench]

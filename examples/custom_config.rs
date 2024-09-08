@@ -1,4 +1,4 @@
-use {snowflake::Snowflake, std::error::Error};
+use {std::error::Error, twitter_snowflake::Snowflake};
 
 fn main() -> Result<(), Box<dyn Error>> {
     let worker_id = 1;

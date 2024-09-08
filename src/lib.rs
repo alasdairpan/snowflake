@@ -31,7 +31,7 @@
 //! # Examples
 //!
 //! ```
-//! use snowflake::Snowflake;
+//! use twitter_snowflake::Snowflake;
 //!
 //! // Create a new snowflake generator with a worker ID
 //! let mut snowflake = Snowflake::new(1).unwrap();
@@ -112,14 +112,14 @@ impl Snowflake {
     /// The worker ID is the only required parameter.
     /// # Examples
     /// ```
-    /// use snowflake::Snowflake;
+    /// use twitter_snowflake::Snowflake;
     /// let worker_id = 1;
     /// let mut snowflake = Snowflake::new(worker_id).unwrap();
     /// ```
     /// # Errors
     /// Returns an error if the worker ID is greater than the maximum worker ID.
     /// ```
-    /// use snowflake::Snowflake;
+    /// use twitter_snowflake::Snowflake;
     /// let worker_id = 1024;
     /// let snowflake = Snowflake::new(worker_id);
     /// assert!(snowflake.is_err());
@@ -129,7 +129,7 @@ impl Snowflake {
     /// Create a new Snowflake builder with the default configuration.
     /// # Examples
     /// ```
-    /// use snowflake::Snowflake;
+    /// use twitter_snowflake::Snowflake;
     /// let mut snowflake = Snowflake::builder().build().unwrap();
     /// ```
     pub fn builder() -> SnowflakeBuilder {
@@ -195,7 +195,7 @@ impl Snowflake {
     /// Generate a new Snowflake ID.
     /// # Examples
     /// ```
-    /// use snowflake::Snowflake;
+    /// use twitter_snowflake::Snowflake;
     /// let worker_id = 1;
     /// let mut snowflake = Snowflake::new(worker_id).unwrap();
     /// let id = snowflake.generate().unwrap();
