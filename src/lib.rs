@@ -153,9 +153,7 @@ impl Snowflake {
         epoch: Option<u64>,
     ) -> Result<Self, SnowflakeError> {
         let worker_id_bits = worker_id_bits.unwrap_or(WORKER_ID_BITS);
-        if !(MIN_BITS .. MAX_ADJUSTABLE_BITS).contains(&worker_id_bits)
-            || !(MIN_BITS .. MAX_ADJUSTABLE_BITS).contains(&(MAX_ADJUSTABLE_BITS - worker_id_bits))
-        {
+        if !(MIN_BITS .. MAX_ADJUSTABLE_BITS).contains(&worker_id_bits) {
             return  Err(SnowflakeError::ArgumentError(format!(
                     "invalid worker id bits(={worker_id_bits}), expected worker id bits ∈ [{MIN_BITS},{MAX_ADJUSTABLE_BITS})",
                 )));
