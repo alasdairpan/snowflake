@@ -28,13 +28,13 @@ Add **Snowflake** to your `Cargo.toml`:
 
 ```toml
 [dependencies]
-snowflake = { git = "ssh://git@github.com/trayvonpan/snowflake.git", tag = "1.0.0" }
+twitter_snowflake = "1.0.0"
 ```
 
 Then, import it in your Rust code:
 
 ```rust
-use {snowflake::Snowflake, std::error::Error};
+use {std::error::Error, twitter_snowflake::Snowflake};
 
 fn main() -> Result<(), Box<dyn Error>> {
     let worker_id = 1;
@@ -51,7 +51,7 @@ fn main() -> Result<(), Box<dyn Error>> {
 You can also set a custom config for ID generation:
 
 ```rust
-use {snowflake::Snowflake, std::error::Error};
+use {std::error::Error, twitter_snowflake::Snowflake};
 
 fn main() -> Result<(), Box<dyn Error>> {
     let worker_id = 1;
@@ -68,7 +68,6 @@ fn main() -> Result<(), Box<dyn Error>> {
     println!("Snowflake ID: {}", sfid);
     Ok(())
 }
-
 ```
 
 See all [examples](./examples/).
