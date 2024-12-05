@@ -9,6 +9,7 @@
 - **Efficient**: Low-latency ID generation with no contention.
 - **Customizable**: Easy to tweak the bit allocation (worker ID, sequence).
 - **Rusty**: Written in pure Rust for performance and safety.
+- **Float Safe**: The `float-safe` feature ensures that the maximum ID is less than 2^53, making it compatible with floating-point number precision.
 
 ## 📐 How It Works
 
@@ -68,6 +69,15 @@ fn main() -> Result<(), Box<dyn Error>> {
     println!("Snowflake ID: {}", sfid);
     Ok(())
 }
+```
+
+### Float-Safe IDs
+
+To ensure that the generated IDs are compatible with floating-point numbers, enable the `float-safe` feature:
+
+```toml
+[dependencies]
+twitter_snowflake = { version = "1", features = ["float-safe"] }
 ```
 
 See all [examples](./examples/).
