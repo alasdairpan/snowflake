@@ -70,15 +70,32 @@ use std::{
     time::{Instant, SystemTime, UNIX_EPOCH},
 };
 
-const EPOCH: u64 = 1704038400000; // 2024-01-01 00:00:00.000
 const SIGN_BITS: u64 = 1;
-const TIMESTAMP_BITS: u64 = 41;
-const WORKER_ID_BITS: u64 = 10;
-
+const MIN_BITS: u64 = 1;
 const TIMEOUT_MILLIS: u128 = 1000;
 
-const MIN_BITS: u64 = 1;
+#[cfg(feature = "float-safe")]
+const WORKER_ID_BITS: u64 = 4;
+#[cfg(not(feature = "float-safe"))]
+const WORKER_ID_BITS: u64 = 10;
+
+#[cfg(not(feature = "float-safe"))]
+const EPOCH_MILLIS: u64 = 1704038400000; // 2024-01-01 00:00:00.000
+#[cfg(feature = "float-safe")]
+const EPOCH_SECS: u64 = 1704038400; // 2024-01-01 00:00:00
+
+#[cfg(feature = "float-safe")]
+const TIMESTAMP_BITS: u64 = 32;
+#[cfg(not(feature = "float-safe"))]
+const TIMESTAMP_BITS: u64 = 41;
+
+#[cfg(feature = "float-safe")]
+const SAFE_UNUSED_BITS: u64 = 11;
+
+#[cfg(not(feature = "float-safe"))]
 const MAX_ADJUSTABLE_BITS: u64 = 64 - SIGN_BITS - TIMESTAMP_BITS;
+#[cfg(feature = "float-safe")]
+const MAX_ADJUSTABLE_BITS: u64 = 64 - SAFE_UNUSED_BITS - SIGN_BITS - TIMESTAMP_BITS;
 
 #[derive(Debug)]
 pub struct Snowflake {
@@ -137,7 +154,10 @@ impl Snowflake {
             worker_id: 0,
             worker_id_bits: Some(WORKER_ID_BITS),
             timeout_millis: Some(TIMEOUT_MILLIS),
-            epoch: Some(EPOCH),
+            #[cfg(feature = "float-safe")]
+            epoch: Some(EPOCH_SECS),
+            #[cfg(not(feature = "float-safe"))]
+            epoch: Some(EPOCH_MILLIS),
         }
     }
 
@@ -158,9 +178,11 @@ impl Snowflake {
     ) -> Result<Self, SnowflakeError> {
         let worker_id_bits = worker_id_bits.unwrap_or(WORKER_ID_BITS);
         if !(MIN_BITS .. MAX_ADJUSTABLE_BITS).contains(&worker_id_bits) {
-            return  Err(SnowflakeError::ArgumentError(format!(
-                    "invalid worker id bits(={worker_id_bits}), expected worker id bits ∈ [{MIN_BITS},{MAX_ADJUSTABLE_BITS})",
-                )));
+            return  Err(SnowflakeError::ArgumentError(
+                format!(
+                    "invalid worker id bits(={worker_id_bits}), expected worker id bits ∈ [{MIN_BITS},{MAX_ADJUSTABLE_BITS})"
+                ))
+            );
         }
 
         let sequence_bits = MAX_ADJUSTABLE_BITS - worker_id_bits;
@@ -175,7 +197,17 @@ impl Snowflake {
             )));
         }
 
-        let epoch = epoch.unwrap_or(EPOCH);
+        #[cfg(feature = "float-safe")]
+        let epoch = epoch.unwrap_or(EPOCH_SECS);
+        #[cfg(not(feature = "float-safe"))]
+        let epoch = epoch.unwrap_or(EPOCH_MILLIS);
+
+        #[cfg(feature = "float-safe")]
+        if epoch >= Self::timestamp()? {
+            return Err(SnowflakeError::InvalidEpoch);
+        }
+
+        #[cfg(not(feature = "float-safe"))]
         if epoch >= Self::timestamp_millis()? {
             return Err(SnowflakeError::InvalidEpoch);
         }
@@ -202,6 +234,9 @@ impl Snowflake {
     /// println!("Generated ID: {}", id);
     /// ```
     pub fn generate(&mut self) -> Result<u64, SnowflakeError> {
+        #[cfg(feature = "float-safe")]
+        let mut now = self.current_timestamp_since_epoch()?;
+        #[cfg(not(feature = "float-safe"))]
         let mut now = self.current_timestamp_millis_since_epoch()?;
         match now.cmp(&self.last_timestamp) {
             // The clock has moved backwards
@@ -230,6 +265,11 @@ impl Snowflake {
                                 return Err(SnowflakeError::WaitForNextPeriodTimeout);
                             }
                         }
+                        #[cfg(feature = "float-safe")]
+                        if let Ok(latest_timestamp) = self.current_timestamp_since_epoch() {
+                            now = latest_timestamp;
+                        }
+                        #[cfg(not(feature = "float-safe"))]
                         if let Ok(latest_timestamp_millis) = self.current_timestamp_millis_since_epoch() {
                             now = latest_timestamp_millis;
                         }
@@ -247,6 +287,15 @@ impl Snowflake {
         Ok((now << self.timestamp_shift) | (self.worker_id << self.worker_id_shift) | (self.sequence))
     }
 
+    #[cfg(feature = "float-safe")]
+    fn timestamp() -> Result<u64, SnowflakeError> {
+        Ok(SystemTime::now()
+            .duration_since(UNIX_EPOCH)
+            .map_err(|_| SnowflakeError::ClockMoveBackwards)?
+            .as_secs())
+    }
+
+    #[cfg(not(feature = "float-safe"))]
     fn timestamp_millis() -> Result<u64, SnowflakeError> {
         SystemTime::now()
             .duration_since(UNIX_EPOCH)
@@ -256,6 +305,16 @@ impl Snowflake {
             .map_err(|_| SnowflakeError::FailedConvertToMillis)
     }
 
+    #[cfg(feature = "float-safe")]
+    fn current_timestamp_since_epoch(&self) -> Result<u64, SnowflakeError> {
+        let now = Self::timestamp()?;
+        match now.cmp(&self.epoch) {
+            Ordering::Less => Err(SnowflakeError::ClockMoveBackwards),
+            _ => Ok(now - self.epoch),
+        }
+    }
+
+    #[cfg(not(feature = "float-safe"))]
     fn current_timestamp_millis_since_epoch(&self) -> Result<u64, SnowflakeError> {
         let now = Self::timestamp_millis()?;
         match now.cmp(&self.epoch) {
