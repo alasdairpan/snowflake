@@ -29,7 +29,7 @@ Add **Snowflake** to your `Cargo.toml`:
 
 ```toml
 [dependencies]
-twitter_snowflake = "1.0.0"
+twitter_snowflake = "1.0.2"
 ```
 
 Then, import it in your Rust code:
