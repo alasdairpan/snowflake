@@ -70,7 +70,6 @@ use std::{
     time::{Instant, SystemTime, UNIX_EPOCH},
 };
 
-const SIGN_BITS: u64 = 1;
 const MIN_BITS: u64 = 1;
 const TIMEOUT_MILLIS: u128 = 1000;
 
@@ -91,11 +90,13 @@ const TIMESTAMP_BITS: u64 = 41;
 
 #[cfg(feature = "float-safe")]
 const SAFE_UNUSED_BITS: u64 = 11;
+#[cfg(not(feature = "float-safe"))]
+const SIGN_BITS: u64 = 1;
 
 #[cfg(not(feature = "float-safe"))]
 const MAX_ADJUSTABLE_BITS: u64 = 64 - SIGN_BITS - TIMESTAMP_BITS;
 #[cfg(feature = "float-safe")]
-const MAX_ADJUSTABLE_BITS: u64 = 64 - SAFE_UNUSED_BITS - SIGN_BITS - TIMESTAMP_BITS;
+const MAX_ADJUSTABLE_BITS: u64 = 64 - SAFE_UNUSED_BITS - TIMESTAMP_BITS;
 
 #[derive(Debug)]
 pub struct Snowflake {
