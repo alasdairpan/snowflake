@@ -142,7 +142,9 @@ impl Snowflake {
     /// let snowflake = Snowflake::new(worker_id);
     /// assert!(snowflake.is_err());
     /// ```
-    pub fn new(worker_id: u64) -> Result<Self, SnowflakeError> { Self::builder().with_worker_id(worker_id).build() }
+    pub fn new(worker_id: u64) -> Result<Self, SnowflakeError> {
+        Self::builder().with_worker_id(worker_id).build()
+    }
 
     /// Create a new Snowflake builder with the default configuration.
     /// # Examples
@@ -178,7 +180,7 @@ impl Snowflake {
         epoch: Option<u64>,
     ) -> Result<Self, SnowflakeError> {
         let worker_id_bits = worker_id_bits.unwrap_or(WORKER_ID_BITS);
-        if !(MIN_BITS .. MAX_ADJUSTABLE_BITS).contains(&worker_id_bits) {
+        if !(MIN_BITS..MAX_ADJUSTABLE_BITS).contains(&worker_id_bits) {
             return  Err(SnowflakeError::ArgumentError(
                 format!(
                     "invalid worker id bits(={worker_id_bits}), expected worker id bits ∈ [{MIN_BITS},{MAX_ADJUSTABLE_BITS})"

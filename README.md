@@ -92,14 +92,16 @@ cargo test
 
 ### Benchmark
 
-- Rust version: rustc 1.79.0-nightly (dbce3b43b 2024-04-20)
-- Machine setup: Apple M1 Pro 3.23GHz CPU 32GB RAM
+Benchmarks are run using [Criterion](https://github.com/bheisler/criterion.rs) and work on stable Rust.
 
-```text
-test bench_builder  ... bench:          26 ns/iter (+/- 1)
-test bench_generate ... bench:         233 ns/iter (+/- 29)
-test bench_new      ... bench:          26 ns/iter (+/- 0)
-```
+- Rust version: rustc 1.90.0 (1159e78c4 2025-09-14)
+- Machine setup: Apple M4 4.46 GHz CPU 32GB RAM
+
+| Benchmark        | Min (ns) | Mean (ns) | Max (ns) | Description                           |
+| ---------------- | -------- | --------- | -------- | ------------------------------------- |
+| `bench_new`      | 22.088   | 22.131    | 22.176   | Creating a new Snowflake instance     |
+| `bench_builder`  | 22.368   | 22.395    | 22.423   | Building Snowflake with custom config |
+| `bench_generate` | 243.83   | 244.12    | 244.44   | Generating a new Snowflake ID         |
 
 ## 🤝 Contributing
 

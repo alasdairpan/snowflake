@@ -1,19 +1,26 @@
 [package]
+edition = "2021"
 name = "twitter_snowflake"
 version = "1.0.2"
-edition = "2021"
 
-authors = ["Trayvon Pan <trayvonpan@gmail.com>"]
+authors = ["Alasdair Pan <alasdairpan@gmail.com>"]
 categories = ["algorithms"]
 description = "A lightweight, efficient library that implements Twitter's Snowflake algorithm"
 documentation = "https://docs.rs/twitter_snowflake/"
 keywords = ["snowflake", "twitter", "unique", "id", "generator"]
 license = "MIT"
-repository = "https://github.com/trayvonpan/snowflake/"
 readme = "README.md"
+repository = "https://github.com/alasdairpan/snowflake/"
 
 [dependencies]
 thiserror = "1.0"
 
+[dev-dependencies]
+criterion = "0.5"
+
 [features]
 float-safe = []
+
+[[bench]]
+harness = false
+name = "bench"
