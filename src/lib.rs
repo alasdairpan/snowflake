@@ -189,8 +189,8 @@ impl Snowflake {
         }
 
         let sequence_bits = MAX_ADJUSTABLE_BITS - worker_id_bits;
-        let max_worker_id = (1 << worker_id_bits) - 1;
-        let max_sequence = (1 << sequence_bits) - 1;
+        let max_worker_id = (1u64 << worker_id_bits) - 1;
+        let max_sequence = (1u64 << sequence_bits) - 1;
         let worker_id_shift = sequence_bits;
         let timestamp_shift = worker_id_bits + sequence_bits;
 
