@@ -32,6 +32,8 @@ Add **Snowflake** to your `Cargo.toml`:
 twitter_snowflake = "1.0.2"
 ```
 
+> **MSRV**: Rust 1.85+
+
 Then, import it in your Rust code:
 
 ```rust
