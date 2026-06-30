@@ -111,7 +111,7 @@ pub struct Snowflake {
     worker_id_shift: u64, // The number of bits to shift the worker ID value
 }
 
-#[derive(thiserror::Error, Debug, Clone, PartialEq)]
+#[derive(thiserror::Error, Debug, Clone, PartialEq, Eq)]
 pub enum SnowflakeError {
     #[error("argument error: {0}")]
     ArgumentError(String),
